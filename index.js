@@ -6,7 +6,6 @@ const server = net.createServer(socket => {
     try {
       const msg = JSON.parse(data.toString());
 
-      // Gelen method "echo" ise, içeriği direkt result olarak döner
       if (msg.method === "echo") {
         const response = {
           jsonrpc: "2.0",
@@ -15,7 +14,6 @@ const server = net.createServer(socket => {
         };
         socket.write(JSON.stringify(response));
       } else {
-        // Bilinmeyen method için boş result döner
         const response = {
           jsonrpc: "2.0",
           id: msg.id || 0,
@@ -30,10 +28,20 @@ const server = net.createServer(socket => {
 
   socket.on('end', () => {
     console.error('Client bağlantısı kapandı.');
+    server.close(() => {
+      console.error('Sunucu kapatıldı. Port serbest bırakıldı.');
+    });
   });
 });
 
-const PORT = process.env.PORT || 8000;
+server.on('error', err => {
+  console.error('Sunucu hatası:', err);
+  server.close(() => {
+    console.error('Sunucu hatadan dolayı kapatıldı. Port serbest.');
+  });
+});
+
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.error(`Echo MCP sunucusu port ${PORT} üzerinden çalışıyor.`);
+  console.error(`Sunucu port ${PORT} üzerinden dinliyor.`);
 });
