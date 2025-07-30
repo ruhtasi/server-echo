@@ -23,5 +23,5 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(8000, () => {
-  console.log("TCP MCP sunucusu 8000 portunda dinliyor 🛰️");
+  console.log("calisiyorrrrrrr");
 });
