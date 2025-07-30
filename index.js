@@ -1,36 +1,27 @@
 #!/usr/bin/env node
-const express = require('express');
-const bodyParser = require('body-parser');
+const net = require('net');
 
-const app = express();
-app.use(bodyParser.text()); // Hem text hem JSON desteklesin
-app.use(bodyParser.json({ strict: false })); // JSON parse ederken esnek olsun
+const server = net.createServer((socket) => {
+  socket.on('data', (data) => {
+    const raw = data.toString();
+    try {
+      const json = JSON.parse(raw); // Sadece geçerli JSON işlenir
+      console.log("Gelen JSON-RPC mesajı:", json);
 
-app.post('/', (req, res) => {
-  let incoming;
-  try {
-    if (typeof req.body === 'string') {
-      incoming = JSON.parse(req.body); // Düz string ise JSON'a çevirmeyi dene
-    } else {
-      incoming = req.body; // Zaten obje ise direkt al
+      const response = {
+        jsonrpc: "2.0",
+        id: json.id || null,
+        result: `Echo MCP yanıtı: ${json.method}`
+      };
+
+      socket.write(JSON.stringify(response));
+    } catch (err) {
+      console.warn("Geçersiz JSON alındı, göz ardı ediliyor:", raw);
+      // Buraya düz metin için geri dönüş istersek eklenebilir
     }
-  } catch (err) {
-    console.warn("Geçersiz JSON yakalandı, ham veri:", req.body);
-    return res.json({
-      type: "error",
-      content: `Geçersiz JSON formatı: ${req.body}`
-    });
-  }
-
-  console.log("Gelen veri:", incoming);
-
-  res.json({
-    type: "text",
-    content: `Echo: ${JSON.stringify(incoming)}`
   });
 });
 
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Echox MCP sunucusu ${PORT} portunda çalışıyor 🛰️`);
+server.listen(8000, () => {
+  console.log("TCP MCP sunucusu 8000 portunda dinliyor 🛰️");
 });
